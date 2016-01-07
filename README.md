@@ -1,2 +1,2 @@
-# Voting App
+# Stock Charting App
 
