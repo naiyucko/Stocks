@@ -3,37 +3,33 @@
 <html>
 
 	<head>
-		<title>Voting App</title>
+		<title>Stocks App</title>
 		
 		<link href="/public/css/main.css" rel="stylesheet" type="text/css">
+		<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
 	</head>
 
-	<header>
-		<p>Welcome, <span id="display-name"></span>!</p>
-		<a class="menu" href="/logout">Logout</a>
-	</header>
-
 	<body>
-		<div class="container">
-			<img src="/public/img/voting_icon.png" height="150" width="150"/>
+		<center>
+			<canvas id="myChart" width="1000" height="700"></canvas>
 			<br />
-			<p class="clementine-text">Voting App</p>
-		</div>
-	
-		<div class="container">
-			<p>What would you like to do today?<span id="click-nbr"></span></p>
-			<br />
-			<div class="btn-container">
-				<button type="submit" class="btn btn-add">New Poll</button>
-				<button class="btn btn-delete">My Polls</button>
-			</div>
-		</div>
-		<center><br /><div class="container text-center" id="newpoll">
-			
-		</div></center>
+		<div id="loadgif" style="visibility:hidden" ><img src="/public/img/loading.gif" alt="Loading" style="width:100px;height:100px;"></div>
+    <div class="row">
+    	<div class="col-md-4 comeon">
+      <input id="moooo" class="form-control" autocomplete="off" placeholder="Enter A Stock Code"/><button id="sendBtn" class="btn">Send</button>
+      </div>
+      </div>
+    <br /><br />
+    <div id="liststo">
+    	
+    </div>
+    </center>
+    
+    	<script src="/controllers/chart.js/Chart.js"></script>
 		<script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
 		<script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
-		<script type="text/javascript" src="controllers/clickController.client.js"></script>
+		<script type="text/javascript" src="/controllers/socket.io/node_modules/socket.io-client/socket.io.js"></script>
+		<script type="text/javascript" src="/controllers/clickController.client.js"></script>
 	</body>
 
 </html>

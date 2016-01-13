@@ -1,27 +1,60 @@
 'use strict';
 
-(function () {
-   var addButton = document.querySelector('.btn-add');
-   var deleteButton = document.querySelector('.btn-delete');
-   var clickNbr = document.querySelector('#click-nbr');
-   var namesection = document.querySelector('#display-name');
-   var pollsection = document.querySelector('#newpoll');
-   var apiUrl = 'https://votingapp-naiyucko.c9users.io/api/clicks';
-   var apiUrlPolls = 'https://votingapp-naiyucko.c9users.io/api/polls';
-   
-   function ready (fn) {
-      if (typeof fn !== 'function') {
-         return;
+var chartarea = document.getElementById("myChart").getContext("2d");
+   var socket = io.connect('http://stocks-naiyucko.c9users.io/');
+   var data3 = {};
+   data3.datasets = [];
+  socket.on('news', function (data) {
+     var htmlsto = "";
+      for (var v = 0; v < data.length; v++) {
+         htmlsto = htmlsto.concat('<br /><div>' + data[v].stock + '<button class="btn btn-danger" onclick="rrmartin(\'' + data[v].stock + '\')">Remove</button>' + '</div>');
       }
+      $("#liststo").html(htmlsto);
+     asyncLoop(data.length, function(loop) {
+        
+    $.ajax({
+                    url: 'http://dev.markitondemand.com/Api/v2/InteractiveChart/jsonp?jsoncallback=Lel&parameters=%7B%22Normalized%22%3Afalse%2C%22NumberOfDays%22%3A7%2C%22DataPeriod%22%3A%22Day%22%2C%22Elements%22%3A%5B%7B%22Symbol%22%3A%22' + data[loop.iteration()].stock + '%22%2C%22Type%22%3A%22price%22%2C%22Params%22%3A%5B%22c%22%5D%7D%5D%7D',
+                    dataType: 'jsonp',
+                    type: 'GET',
+                    timeout:3000,
+                    beforeSend:function() {
+                       $("#loadgif").css("visibility", "visible");
+                    },
+                    complete:function() {
+                       $("#loadgif").css("visibility", "hidden");
+                    },                      
+                    jsonpCallback: 'jsoncallback',
+                    success: function(ahuehue){
+                       //console.log(ahuehue.Elements[0].DataSeries.close.values);
+         var valuesofdata = ahuehue.Elements[0].DataSeries.close.values;
+         data3.labels = ahuehue.Dates;
+         var rand1 = Math.floor(Math.random()*(255+1));
+         var rand2 = Math.floor(Math.random()*(255+1));
+         var rand3 = Math.floor(Math.random()*(255+1));
+        data3.datasets[loop.iteration()] = {
+            label: ahuehue.Elements[0].Symbol,
+            fillColor: "rgba(" + rand1 + "," + rand2 + "," + rand3 + "," + "0.2)",
+            strokeColor: "rgba(" + rand1 + "," + rand2 + "," + rand3 + "," + "1)",
+            pointColor: "rgba(" + rand1 + "," + rand2 + "," + rand3 + "," + "1)",
+            pointStrokeColor: "#fff",
+            pointHighlightFill: "#fff",
+            pointHighlightStroke: "rgba(" + rand1 + "," + rand2 + "," + rand3 + "," + "1)",
+            data: valuesofdata
+        };
+        // Okay, for cycle could continue
+        loop.next();
+                    }
+                });
+    },updateChart
+   );
+  });
+  
+  $( "#sendBtn" ).click(function() {
+  socket.emit('addstock', {stock: $("#moooo").val()});
+  $("#moooo").val('');
+});
 
-      if (document.readyState === 'complete') {
-         return fn();
-      }
-
-      document.addEventListener('DOMContentLoaded', fn, false);
-   }
-   
-   function ajaxRequest (method, url, callback) {
+function ajaxRequest (method, url, callback) {
       var xmlhttp = new XMLHttpRequest();
 
       xmlhttp.onreadystatechange = function () {
@@ -33,62 +66,74 @@
       xmlhttp.open(method, url, true);
       xmlhttp.send();
    }
-   
-    function updateClickCount (data) {
-      var clicksObject = JSON.parse(data);
-      namesection.innerHTML = clicksObject.username;
-   }
-   
-   function updateNewPoll () {
-      pollsection.innerHTML = '<form id="myForm" method="post" action="newpoll"><p>Poll Title: <input type="text" name="title" id="title" onkeyup=topLel(this.value) /><span id="wowthere"></span></p><br /><div id="input1" style="margin-bottom:4px;" class="clonedInput">Option: <input type="text" name="name1" id="name1" /></div><div><input type="button" id="btnAdd" value="Add Another" /></div><p class="submit"><input type="submit" name="commit" value="Save" id="savebtn"></p></form>';
-      $('#btnAdd').click(function() {
-          var num        = $('.clonedInput').length;    // how many "duplicatable" input fields we currently have
-          var newNum    = new Number(num + 1);        // the numeric ID of the new input field being added
-      
-          // create the new element via clone(), and manipulate it's ID using newNum value
-          var newElem = $('#input' + num).clone().attr('id', 'input' + newNum);
-      
-          // manipulate the name/id values of the input inside the new element
-          newElem.children(':first').attr('id', 'name' + newNum).attr('name', 'name' + newNum);
-      
-          // insert the new element after the last "duplicatable" input field
-          $('#input' + num).after(newElem);
-      });
-   }
-   
-   addButton.addEventListener('click', function () {
-      updateNewPoll();
+   function asyncLoop(iterations, func, callback) {
+    var index = 0;
+    var done = false;
+    var loop = {
+        next: function() {
+            if (done) {
+                return;
+            }
 
-   }, false);
-   
-   deleteButton.addEventListener('click', function () {
-      ajaxRequest('GET', apiUrlPolls, function (data) {
-         var html = "";
-         var jdata = JSON.parse(data);
-         if (jdata.length === 0)
-         {
-            html += "You haven't created any polls yet!";
-         }
-         for (var v = 0; v < jdata.length; v++)
-         {
-            html += '<br /><br /><a class = "menu" href="/poll/' + jdata[v].user + '/' + jdata[v].title + '/view"><b>' + jdata[v].title + '</b></a>' + '<div class="remove-btn"><a href="/poll/' + jdata[v].user + '/' + jdata[v].title + '/delete"><button class="btn btn-remove">Delete</button></div>';
-         }
-         pollsection.innerHTML = html;
-      });
+            if (index < iterations) {
+                index++;
+                func(loop);
 
-   }, false);
-   
-   ready(ajaxRequest('GET', apiUrl, updateClickCount));
-})();
+            } else {
+                done = true;
+                callback();
+            }
+        },
 
-function topLel(textf) {
-   console.log(textf);
-   if (textf.indexOf("'") !== -1) {
-      $('#savebtn').attr('disabled','disabled');
-      $('#wowthere').html("No special characters allowed");
-   }
-   else {
-      $('#savebtn').attr('disabled',false);
-      $('#wowthere').html("");
-   }
+        iteration: function() {
+            return index - 1;
+        },
+
+        break: function() {
+            done = true;
+            callback();
+        }
+    };
+    loop.next();
+    return loop;
 }
+function updateChart() {
+     var myLineChart = new Chart(chartarea).Line(data3, {multiTooltipTemplate: "<%= datasetLabel %> - <%= value %>"});
+}
+function rrmartin (value) {
+   socket.emit('removestock', {stock: value});
+}
+/*
+   function addMessage(msg, pseudo) {
+    $("#chatEntries").append('<div class="message"><p>' + pseudo + ' : ' + msg + '</p></div>');
+   }
+   function sentMessage() {
+    if ($('#messageInput').val() != "") 
+    {
+        socket.emit('message', $('#messageInput').val());
+        addMessage($('#messageInput').val(), "Me", new Date().toISOString(), true);
+        $('#messageInput').val('');
+    }
+   }
+   
+   function setPseudo() {
+    if ($("#pseudoInput").val() != "")
+    {
+        socket.emit('setPseudo', $("#pseudoInput").val());
+        $('#chatControls').show();
+        $('#pseudoInput').hide();
+        $('#pseudoSet').hide();
+    }
+   }
+   
+   socket.on('message', function(data) {
+    addMessage(data['message'], data['pseudo']);
+   });
+   
+$(function() {
+    $("#chatControls").hide();
+    $("#pseudoSet").click(function() {setPseudo()});
+    $("#submit").click(function() {sentMessage();});
+});
+
+*/
